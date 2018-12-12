@@ -13,9 +13,18 @@ exit 1
 fi
 
 df="docker/$IMAGE/Dockerfile"
-if [[ -f "$df" ]]; then
-  $DOCKER build docker/$IMAGE -t "$IMAGE"
-  exit 0
+if [[ ! -f "$df" ]]; then
+  echo "No such dockerfile: $df" >&2
+  exit -1
 fi
 
-echo "No such dockerfile: $df" >&2
+KEYFILE=$HOME/keys/shopify-data-ml-platform-exp.json
+TMPKEY=tmp-google-auth-key.json
+
+cp ${KEYFILE} docker/${IMAGE}/${TMPKEY}
+${DOCKER} build --build-arg GCLOUD_AUTH_KEY="${TMPKEY}" \
+          docker/${IMAGE} -t "$IMAGE"
+
+rm docker/${IMAGE}/${TMPKEY}
+
+

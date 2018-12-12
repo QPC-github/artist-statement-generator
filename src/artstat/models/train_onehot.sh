@@ -1,11 +1,22 @@
 #!/usr/bin/env bash
 
+GLOVE_DIMS=300
+GLOVE_FILE=/data/shared/glove/glove.6B.${GLOVE_DIMS}d.txt \
+
+VOCAB_SIZE=10000
+VOCAB_FILE=/data/local/vocab_lower_${VOCAB_SIZE}.txt
+
+CHECKPOINT_DIR=/app/notebooks/checkpoints/m2
+TRAINING_DATA_DIR=/data/local/artstat/train
+
 python3 /app/src/artstat/models/onehot.py train \
---glove_dims=300 \
---glove_file=/data/shared/glove/glove.6B.300d.txt \
+--glove_dims=$GLOVE_DIMS \
+--glove_file=$GLOVE_FILE \
+--vocab_file=$VOCAB_FILE \
+--checkpoint_dir=$CHECKPOINT_DIR \
+--training_data_dir=$TRAINING_DATA_DIR \
 --vocab_is_lowercase=True \
---vocab_file=vocab_lower.txt \
---vocab_size=10000 \
+--vocab_size=$VOCAB_SIZE \
 --seqlen=32 \
 --sample_size=5 \
 --batch_size=32 \
@@ -18,8 +29,6 @@ python3 /app/src/artstat/models/onehot.py train \
 --dense_size=300 \
 --lstm_size=128 \
 --lstm_layers=1 \
---checkpoint_dir=/app/notebooks/checkpoints/m2 \
---training_data_dir=/data/local/artstat/train \
 --num_epochs=1000 \
 --starting_epoch=0 \
 --epochs_per_dataset=4

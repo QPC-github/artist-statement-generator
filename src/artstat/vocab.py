@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+import sys
+
 import click
 import numpy as np
 from tensorflow.python.lib.io import file_io as fio
@@ -54,7 +56,9 @@ def writevocab(vocab, outputfile, sortwords, vocabsize):
 @click.argument("textpath")
 def main(normalize_unicode, maxnumfiles, outputfile, textpath, sortwords, quiet, output_word_counts_file, vocabsize,
          lowercase):
-    """Loads texts recursively from TEXTPATH and outputs the vocabulary."""
+    """Recursively loads text from all files in TEXTPATH and outputs the vocabulary.
+
+    TEXTPATH may contain multiple comma-separated directory paths."""
 
     def echo(*args):
         if not quiet:
@@ -64,12 +68,20 @@ def main(normalize_unicode, maxnumfiles, outputfile, textpath, sortwords, quiet,
 
     tokenizer = CustomTokenizer(normalize_unicode)
 
-    echo("Processing files in ", textpath)
+    files_list = []
+    for textpathdir in textpath.split(","):
+        echo("Listing files in ", textpathdir)
+        files_list.extend(recursively_list_files(textpathdir))
+
+    if len(files_list) == 0:
+        echo("No files found in TEXTPATH! Exiting.\n\n")
+        sys.exit(-1)
+
+    echo("Processing files")
     echo("")
 
-    files = recursively_list_files(textpath)
     if not quiet:
-        files = tqdm(files, ncols=100, ascii=True)
+        files = tqdm(files_list, ncols=100, ascii=True)
 
     maxtokens, sumtokens = 0, 0
 
@@ -93,7 +105,7 @@ def main(normalize_unicode, maxnumfiles, outputfile, textpath, sortwords, quiet,
 
     totaloccurrences = np.sum(wpf)
     echo("")
-    echo("Total files:", i)
+    echo("Total files:", len(files))
     echo("Unique words:", len(vocab))
     echo("Total words:", totaloccurrences)
     echo("Max words per file:", np.max(wpf))
