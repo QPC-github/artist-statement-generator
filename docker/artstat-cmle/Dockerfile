@@ -40,7 +40,7 @@ RUN gcloud config set project shopify-data-ml-platform-exp
 
 
 ################################################################################
-CMD python -m jupyter notebook --allow-root \
+CMD jupyter notebook --allow-root \
     --ip=0.0.0.0 --notebook-dir=notebooks --port=9999
 
 EXPOSE 9999

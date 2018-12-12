@@ -1,12 +1,17 @@
 #!/usr/bin/env bash
 
 GLOVE_DIMS=300
-GLOVE_FILE=/data/shared/glove/glove.6B.${GLOVE_DIMS}d.txt \
+GLOVE_FILE=/data/shared/glove.6B/glove.6B.${GLOVE_DIMS}d.txt \
 
 VOCAB_SIZE=10000
 VOCAB_FILE=/data/local/vocab_lower_${VOCAB_SIZE}.txt
 
 CHECKPOINT_DIR=/app/notebooks/checkpoints/m2
+if [[ ! -f ${CHECKPOINT_DIR} ]]; then
+  mkdir -p ${CHECKPOINT_DIR}
+fi
+
+
 TRAINING_DATA_DIR=/data/local/artstat/train
 
 python3 /app/src/artstat/models/onehot.py train \
@@ -31,7 +36,7 @@ python3 /app/src/artstat/models/onehot.py train \
 --lstm_layers=1 \
 --num_epochs=1000 \
 --starting_epoch=0 \
---epochs_per_dataset=4
+--epochs_per_dataset=20000
 ##--starting_model_file=/app/notebooks/checkpoints/m2/weights.lstm1024.batch128.glove300.sample10.vocab10000.default.hdf5
 
 #--starting_model_file=/app/notebooks/checkpoints/m2/weights.lstm1024.batch128.glove300.sample10.vocab10000.default.hdf5
