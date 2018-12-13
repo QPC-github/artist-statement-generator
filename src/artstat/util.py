@@ -7,6 +7,7 @@ import numpy as np
 import regex as re
 from nltk import WordPunctTokenizer
 from tensorflow.keras.utils import Sequence
+from tensorflow.python.lib.io.file_io import FileIO
 from tqdm import tqdm
 from unidecode import unidecode
 
@@ -24,7 +25,7 @@ def load_vocab(filename, maxwords=0):
     words = []
     counter = 1  # start off with 1 so that embedding matrix's first vector is zero and second is for unknown
     words.append(pad)
-    with open(filename, "r") as f:
+    with FileIO(filename, "r") as f:
         for i, line in enumerate(f):
             if 0 < maxwords < i + 1:
                 break
@@ -51,7 +52,8 @@ def load_embeddings(vocab, dim, filename):
     """
     em = np.zeros((len(vocab) + 1, dim), dtype="float32")
 
-    with open(filename, "r", encoding="utf-8") as f:
+    # with FileIO(filename, "r", encoding="utf-8") as f:
+    with FileIO(filename, "r") as f:
         for linenum, line in enumerate(f):
             line = unidecode(line)
             idx = line.find(' ')
@@ -93,7 +95,6 @@ class Text2Seq:
         self.vocab = vocab
         self.vocab_is_lowercase = vocab_is_lowercase
         self.tokenizer = CustomTokenizer(unicode_to_ascii=False)
-
 
     def toseq(self, text, notfound=0):
         """
@@ -168,7 +169,7 @@ def load_data_sequences(path, vocab, seqlen, stride, numfiles=0):
     for i, fname in enumerate(tqdm(files, ascii=True)):
         if 0 < numfiles < (i + 1):
             break  # Process at most `numfiles` files
-        with open(fname, "r") as f:
+        with FileIO(fname, "r") as f:
             seq, unk = t2s.toseq(f.read())
             Xi, Yi = seqwindows(seq, seqlen, stride)
             Xui, Yui = seqwindows(unk, seqlen, stride, dtype="float32")
@@ -194,7 +195,7 @@ def load_data_sequences(path, vocab, seqlen, stride, numfiles=0):
 #         for i, fname in enumerate(files):
 #             if numfiles > 0 and (i + 1) > numfiles:
 #                 break
-#             async with aiofiles.open(fname, "r", encoding="utf-8") as f:
+#             async with aiofiles.FileIO(fname, "r", encoding="utf-8") as f:
 #                 text = await f.read()
 #                 await queue.put(text)
 #         await queue.put(None)
@@ -224,9 +225,10 @@ def load_data(path, vocab, pad=32, numfiles=0, lowercase=False):
     t2s = Text2Seq(vocab, vocab_is_lowercase=lowercase)
     files = recursively_list_files(path)
     for i, fname in enumerate(tqdm(files, ascii=True, mininterval=0.5)):
-        if numfiles > 0 and (i + 1) > numfiles:
+        if 0 < numfiles < (i + 1):
             break  # Process at most `numfiles` files
-        with open(fname, "r", encoding="utf-8") as f:
+        # with FileIO(fname, "r", encoding="utf-8") as f:
+        with FileIO(fname, "r") as f:
             text = f.read()
             seq, aux = t2s.toseq(text)
             X.extend(seq)
@@ -240,9 +242,9 @@ def load_data(path, vocab, pad=32, numfiles=0, lowercase=False):
 
 
 eltypemap = {
-    int:   "int32",
+    int: "int32",
     float: "float32"
-    }
+}
 
 
 def eltype(a):

@@ -13,6 +13,7 @@ import tensorflow.keras.layers
 from box import Box
 from tensorflow.keras import Input, Model
 from tensorflow.keras.callbacks import LearningRateScheduler
+from tensorflow.python.lib.io.file_io import FileIO
 
 from artstat import util
 from artstat.util import Text2Seq, capitalize
@@ -152,7 +153,7 @@ def info(*args):
 @flags_resources
 @flags_shared
 @flags_hyperparams
-@opt("--checkpoint_dir", required=True, type=dir_path)
+@opt("--checkpoint_dir", required=True)
 @opt("--starting_model_file", type=file_path)
 @opt("--training_data_dir", required=True, type=dir_path,
      help="Dir containing training data as text files. All files under this dir will be read recursively.")
@@ -180,14 +181,14 @@ def train(vocab_file, vocab_is_lowercase, glove_file, glove_dims, training_data_
         emb_matrix_cache_path = os.path.join(cache_dir, "emb_matrix")
         if cache_dir and os.path.exists(emb_matrix_cache_path):
             info("Loading embedding matrix from cache")
-            with open(emb_matrix_cache_path, "rb") as f:
+            with FileIO(emb_matrix_cache_path, "rb") as f:
                 emb_matrix = pickle.Unpickler(f).load()
         else:
             info("Loading embedding matrix")
             emb_matrix = util.load_embeddings(vocab, glove_dims, glove_file)
             if cache_dir:
                 info("Writing embedding matrix cache")
-                with open(emb_matrix_cache_path, "wb") as f:
+                with FileIO(emb_matrix_cache_path, "wb") as f:
                     pickle.Pickler(f, protocol=pickle.HIGHEST_PROTOCOL).dump(emb_matrix)
         info("Creating model")
         model = make_model(emb_matrix=emb_matrix, vocab=vocab, seqlen=seqlen, sample_size=sample_size,
@@ -197,7 +198,7 @@ def train(vocab_file, vocab_is_lowercase, glove_file, glove_dims, training_data_
     training_data_cache_path = os.path.join(cache_dir, "training_data")
     if cache_dir and os.path.exists(training_data_cache_path):
         info("Loading training data from cache:", training_data_cache_path)
-        with open(training_data_cache_path, "rb") as f:
+        with FileIO(training_data_cache_path, "rb") as f:
             unpickler = pickle.Unpickler(f)
             X, Xu = unpickler.load()
     else:
@@ -206,7 +207,7 @@ def train(vocab_file, vocab_is_lowercase, glove_file, glove_dims, training_data_
                                lowercase=vocab_is_lowercase)
         if cache_dir:
             info("Saving prepared training data to cache:", training_data_cache_path)
-            with open(training_data_cache_path, "wb") as f:
+            with FileIO(training_data_cache_path, "wb") as f:
                 pickler = pickle.Pickler(f, pickle.HIGHEST_PROTOCOL)
                 pickler.dump([X, Xu])
 
@@ -226,8 +227,8 @@ def train(vocab_file, vocab_is_lowercase, glove_file, glove_dims, training_data_
 
     decay_scheduler = LearningRateScheduler(decay, verbose=1)
 
-    opt = keras.optimizers.Adam(lr=0.0)
-    model.compile(opt, loss='categorical_crossentropy', metrics=["accuracy"])
+    optimizer = keras.optimizers.Adam(lr=0.0)
+    model.compile(optimizer, loss='categorical_crossentropy', metrics=["accuracy"])
 
     train_seq = util.NegativeSamplingPermutedSequence(data_x=X, data_xu=Xu, seqlen=seqlen, batch_size=batch_size,
                                                       sample_size=sample_size, vocab_size=len(vocab) + 1)

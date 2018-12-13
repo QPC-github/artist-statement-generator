@@ -6,11 +6,12 @@ GLOVE_FILE=/data/shared/glove.6B/glove.6B.${GLOVE_DIMS}d.txt \
 VOCAB_SIZE=10000
 VOCAB_FILE=/data/local/vocab_lower_${VOCAB_SIZE}.txt
 
-CHECKPOINT_DIR=/app/notebooks/checkpoints/m2
-if [[ ! -f ${CHECKPOINT_DIR} ]]; then
-  mkdir -p ${CHECKPOINT_DIR}
-fi
+#CHECKPOINT_DIR=/app/notebooks/checkpoints/m2
+#if [[ ! -f ${CHECKPOINT_DIR} ]]; then
+#  mkdir -p ${CHECKPOINT_DIR}
+#fi
 
+CHECKPOINT_DIR=gs://mlpl-artstat/checkpoints
 
 TRAINING_DATA_DIR=/data/local/artstat/train
 
